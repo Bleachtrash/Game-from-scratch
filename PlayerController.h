@@ -17,6 +17,7 @@ class PlayerController
         Vector2 Velocity = {0, 0};
         vector<Object> CollideObj;
         bool grounded = false;
+        bool jumpPressed = false;
     public:
         Object object;
         Vector2 MoveDirection = {0, 0};
@@ -44,31 +45,20 @@ class PlayerController
             {
                 MoveDirection.x = 0;
             }
-            // if(SDL_GetKeyboardState(NULL)[SDL_SCANCODE_W])
-            // {
-            //     if(!jump)
-            //     {
-            //         jump = true;
-            //         jumping = true;
-            //     }
-            // }
-            // else
-            // {
-            //     jump = false;
-            // }
-            if(SDL_GetKeyboardState(NULL)[SDL_SCANCODE_W] && grounded)
+            if(SDL_GetKeyboardState(NULL)[SDL_SCANCODE_W])
             {
-                Velocity.y = -20;
-                grounded = false;
+                if(grounded && !jumpPressed)
+                {
+                    Velocity.y = -20;
+                    grounded = false;
+                }
+                jumpPressed = true;
             }
-            // else if(SDL_GetKeyboardState(NULL)[SDL_SCANCODE_S])
-            // {
-            //     MoveDirection.y = 1;
-            // }
-            // else
-            // {
-            //     MoveDirection.y = 0;
-            // }
+            else
+            {
+                jumpPressed = false;
+            }
+
             Floaty = 5;
             if(Velocity.y < 0)
             {
@@ -81,7 +71,7 @@ class PlayerController
             Velocity.x += (TargetVelocity.x - Velocity.x)/Slippery;
             Velocity.y += (gravity - Velocity.y)/Floaty*deltaTime;
 
-            // cout << CurrentSpeed << endl;
+
             for(int i = 0; i < CollideObj.size(); i++)
             {
                 if(WillCollide(object, CollideObj[i], {0, Velocity.y}))
@@ -93,14 +83,18 @@ class PlayerController
                     Collide({Velocity.x, 0});
                 }
             }
+            if(Velocity.y == 0)
+            {
+                grounded = true;
+            }
+            else
+            {
+                grounded = false;
+            }
             object.Position = object.Position + Velocity*deltaTime;
         }
         void Collide(Vector2 Direction)
         {
             Velocity = Velocity - Direction;
-            if(Direction.y > 0)
-            {
-                grounded = true;
-            }
         }
 };
