@@ -55,16 +55,21 @@ bool PointCollide(Object a, Vector2 point)
     }
     return false;
 }
-float GetDistance(Object a, Object b, Vector2 Direction)
+bool BoxCast(Object Obj, Vector2 Dir, float Magnitude, vector<Object> Mask)
 {
-    for(int i = 0; i < Direction.Magnitude(); i++)
+    Object temp = Obj;
+    for(int i = 0; i < Mask.size(); i++)
     {
-        if(PointCollide(b, a.Position + Direction.Normalized()*i))
+        for(int j = 0; j < Magnitude; j++)
         {
-            return i;
+            temp.Position = temp.Position + Dir * j;
+            if(IsColliding(temp, Mask[i]))
+            {
+                return true;
+            }
         }
     }
-    return Direction.Magnitude();
+    return false;
 }
 // void DrawObject(SDL_Renderer *renderer, Object obj, CameraController Camera)
 // {
@@ -79,8 +84,8 @@ float GetDistance(Object a, Object b, Vector2 Direction)
 void RenderDrawObject(SDL_Renderer *renderer, Object obj)
 {
     SDL_Rect DrawRect;
-    DrawRect.x = obj.Position.x - obj.Scale.x/2;
-    DrawRect.y = obj.Position.y - obj.Scale.y/2;
+    DrawRect.x = obj.Position.x;
+    DrawRect.y = obj.Position.y;
     DrawRect.w = obj.Scale.x;
     DrawRect.h = obj.Scale.y;
     SDL_SetRenderDrawColor(renderer, obj.Color.r, obj.Color.g, obj.Color.b, obj.Color.a);

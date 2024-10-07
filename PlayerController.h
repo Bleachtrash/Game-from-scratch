@@ -5,24 +5,27 @@
 class PlayerController
 {
     private:
-        float AccelSpeed = 2;
-        float SpeedCap = 15;
-        float friction = 5;
+        
         Uint64 Now = SDL_GetPerformanceCounter();
         Uint64 Last = 0;
         float deltaTime = 0;
-        float gravity = 4;
+        float gravity = 9;
+        float SpeedCap = 8;
+        float Floaty = 5;
+        float Slippery = 50;
+        Vector2 TargetVelocity = {0, 0};
+        Vector2 Velocity = {0, 0};
+        vector<Object> CollideObj;
+        bool grounded = false;
     public:
         Object object;
-        Vector2 Velocity = {0, 0};
-        Vector2 Acceleration = {0, 0};
         Vector2 MoveDirection = {0, 0};
-        Vector2 Middle = object.Position + object.Scale/2;
-        bool jump = false;
-        bool jumping = false;
-        bool grounded = false;
-        bool canJump = false;
 
+        void Start(vector<Object> temp)
+        {
+            CollideObj = temp;
+            object.Position = object.Position + object.Position.Normalized() * 0.1;
+        }
         void Update()
         {
             Last = Now;
@@ -41,58 +44,63 @@ class PlayerController
             {
                 MoveDirection.x = 0;
             }
-            if(SDL_GetKeyboardState(NULL)[SDL_SCANCODE_W])
+            // if(SDL_GetKeyboardState(NULL)[SDL_SCANCODE_W])
+            // {
+            //     if(!jump)
+            //     {
+            //         jump = true;
+            //         jumping = true;
+            //     }
+            // }
+            // else
+            // {
+            //     jump = false;
+            // }
+            if(SDL_GetKeyboardState(NULL)[SDL_SCANCODE_W] && grounded)
             {
-                if(!jump)
-                {
-                    jump = true;
-                    jumping = true;
-                }
+                Velocity.y = -20;
+                grounded = false;
             }
-            else
+            // else if(SDL_GetKeyboardState(NULL)[SDL_SCANCODE_S])
+            // {
+            //     MoveDirection.y = 1;
+            // }
+            // else
+            // {
+            //     MoveDirection.y = 0;
+            // }
+            Floaty = 5;
+            if(Velocity.y < 0)
             {
-                jump = false;
-            }
-            if(SDL_GetKeyboardState(NULL)[SDL_SCANCODE_S])
-            {
-                MoveDirection.y = 1;
-            }
-            else
-            {
-                MoveDirection.y = 0;
+                Floaty = 15;
             }
             MoveDirection = MoveDirection.Normalized();
 
-            gravity = 0; 
-            friction = 4;
-            // object.Position = object.Position + Vector2{30, 30} * deltaTime;
+            TargetVelocity.x = MoveDirection.x * SpeedCap;
 
-            Acceleration = (Velocity.Magnitude() < SpeedCap? MoveDirection * AccelSpeed : Vector2{0, 0});
+            Velocity.x += (TargetVelocity.x - Velocity.x)/Slippery;
+            Velocity.y += (gravity - Velocity.y)/Floaty*deltaTime;
 
-            if(!grounded && jump && Velocity.y < 0)
+            // cout << CurrentSpeed << endl;
+            for(int i = 0; i < CollideObj.size(); i++)
             {
-                gravity = 1.5;
-                // cout << "HELLO??\n";
+                if(WillCollide(object, CollideObj[i], {0, Velocity.y}))
+                {
+                    Collide({0, Velocity.y});
+                }
+                if(WillCollide(object, CollideObj[i], {Velocity.x, 0}))
+                {
+                    Collide({Velocity.x, 0});
+                }
             }
-            if(!grounded)
-            {
-                Velocity.y += Velocity.y< SpeedCap? gravity * deltaTime : 0;
-                friction = 50;
-            }
-            if(grounded && jumping)
-            {
-                Velocity.y = -25;
-                jumping = false;
-                grounded = false;
-            }
-
-            object.Position = object.Position + Velocity * deltaTime;
-            Velocity = Velocity + Acceleration * deltaTime;
-            
-            Velocity = Velocity - Velocity/friction*deltaTime;
+            object.Position = object.Position + Velocity*deltaTime;
         }
-        void Collide(Object Collision, Vector2 Direction)
+        void Collide(Vector2 Direction)
         {
-            cout << GetDistance(object, Collision, Direction) << endl;
+            Velocity = Velocity - Direction;
+            if(Direction.y > 0)
+            {
+                grounded = true;
+            }
         }
 };

@@ -11,6 +11,11 @@
 #define BLACK SDL_Color{0, 0, 0, 255}
 #define BLUE SDL_Color{0, 0, 255, 255}
 
+#define UP Vector2{0, -1}
+#define DOWN Vector2{0, 1}
+#define LEFT Vector2{-1, 0}
+#define RIGHT Vector2{1, 0}
+
 int main()
 {
     SDL_Init(SDL_INIT_EVERYTHING);
@@ -24,12 +29,13 @@ int main()
     Vector2 MousePos;
 
     PlayerController Player;
-    Player.object = {"Player", {400, 200}, {20, 40}, WHITE};
-
-    Object Floor = {"Floor", {400, 375}, {800, 50}, BLUE};
-    Object Wall = {"Wall", {400, 300}, {25, 100}, BLUE};
+    Player.object = {"Player", {600, 200}, {20, 40}, WHITE};
+    
+    Object Floor = {"Floor", {0, 350}, {800, 50}, BLUE};
+    Object Wall = {"Wall", {400, 250}, {25, 100}, BLUE};
 
     vector<Object> CollideObj = {Floor, Wall};
+    Player.Start(CollideObj);
     Uint64 Now = SDL_GetPerformanceCounter();
     Uint64 Last = 0;
     float deltaTime = 0;
@@ -45,19 +51,8 @@ int main()
         for(int i = 0; i < CollideObj.size(); i++)
         {
             RenderDrawObject(renderer, CollideObj[i]);
-            Object temp;
-            temp.Scale = {Player.Velocity.x, Player.object.Scale.y};
-            temp.Position = Player.object.Position;
-            if(IsColliding(CollideObj[i], temp))
-            {
-                Player.Collide(CollideObj[i], {Player.Velocity.x, 0});
-            }
-            temp.Scale = {Player.object.Scale.x, Player.Velocity.y};
-            if(IsColliding(CollideObj[i], temp))
-            {
-                Player.Collide(CollideObj[i], {0, Player.Velocity.y});
-            }
         }
+
         Player.Update();
         RenderDrawObject(renderer, Player.object);
 
